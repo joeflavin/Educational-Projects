@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>COMP30680 Assignment 2 2020 - CHI'20 Schedule - Joseph Flavin</title>
+<style>
+
+    body { 
+        font-family: sans-serif;
+        font-size: 14px;
+        }
+
+    header {
+        background-color: #496B6F;
+        color: #CAD2C5;
+        text-align: left;
+        padding: 5px 0;
+        }
+
+    header div { margin-left: 50px; }
+
+    #title { 
+        margin-left: 15px;
+        color: #FFCF56 ;
+        font-stretch: extra-expanded;
+        }
+
+    #selectors { margin-top: 15px; }
+    
+    select { 
+        margin: 5px 5px 5px 0;
+        background-color: #CAD2C5;
+        padding: 4px 10px;
+        border-radius: 3px;
+    }
+    
+    .selectButton {
+        background-color: #2F3E46;
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 3px;
+        margin: 5px 8px;
+        }
+
+    .selectButton:hover { color: #FFCF56; }
+
+    .selectButton:active { color: #CAD2C5; }
+
+    #daySelectionError {
+        display: inline-block;
+        color: red;
+        font-weight: bold;
+        margin-left: 13px;
+    }
+    
+    #heading, #info { margin-left: 10px; }
+
+    table, th, td {
+        border: 1px solid grey;
+        border-collapse: collapse;
+        padding: 5px;
+    }
+
+    th {
+        background-color: #52796F;
+        color: white;
+    }
+
+    table tr:nth-child(odd) { background-color: #f1f1f1; }
+
+    table tr:nth-child(even) { background-color: #ffffff; }
+
+    td:nth-child(3), td:nth-child(4) { text-align: center; }
+
+    .hidethis { margin-top: 5px;}
+
+    .hidethis > tbody > tr > th { background-color: #84A98C; }
+
+    .hidethis > tbody > tr > td:nth-child(2) { text-align: center; }
+
+    .cursorChange, .clickSpan { cursor: pointer; }
+    
+    .clickSpan { display: block; }
+
+</style>
+    
+</head>
+<body>
+<div id="pagewrapper">
+
+    <header><div id="title"><h1>CHI ' 20</h1></div><div><h2>2020 ACM Conference on Human Factors in Computing Systems<br>Conference Schedule</h2></div></header>    
+
+    <div id="selectors">
+        <select id="daySelector" onchange="fillTimes()">
+            <option value="-1" selected>-- Select Day (required) --</option>
+        </select>
+        <select id="timeSelector" style="visibility: hidden;"></select>
+        <input class="selectButton" type="submit" value="Submit" onclick="buildTable()">
+        <div id="daySelectionError"></div>
+    </div>
+
+    <div id="main">
+        <p id="heading" style="margin: 5px;"></p>
+        <form id="radioFilter" style="margin: 5px; padding: 5px;"></form>
+        <p id="info"></p>
+        <div id="mainTable"></div>    
+    </div>
+
+</div>
+    
+<script>
+
+// Load JSON File
+var xmlhttp = new XMLHttpRequest();
+var url = "scheduling.json";
+
+xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        
+        //Parse the JSON data to a JavaScript object 
+        var parsedObj = JSON.parse(xmlhttp.responseText);    
+        initialiseData(parsedObj); 
+    }
+};
+
+xmlhttp.open("GET", url, true);
+xmlhttp.send();
+
+// Read JSON obj and initialise as global variable dailyJSON - called upon successfully getting JSON
+function initialiseData(obj) {
+    parsedJSON = obj;
+    fillDays(parsedJSON);   // Call function to populate daySelector menu
+}    
+
+// Function fills daySelector with Days - called by initialiseData()
+function fillDays(obj) {
+    // Generate Day-selector Drop-Down List
+    for (var i = 0; i < obj.length; i++) {
+        var day = obj[i].day;
+        var date = obj[i].date;
+        var daystr = day +" - "+ date;
+        var selector = document.getElementById("daySelector");
+        selector.innerHTML += '<option value="'+ i +'">'+ daystr +'</option>';
+    }
+}
+
+// Function gets JSON index from daySelector and fills timeSelector with timeslots for that day - called by #daySelector selection
+function fillTimes() {
+    // Clear possible error msg
+    document.getElementById('daySelectionError').innerHTML = '';
+    
+    var x = document.getElementById("daySelector");
+    var dayIndex = x.options[x.selectedIndex].value;
+    
+    var selector = document.getElementById("timeSelector");
+//    console.log("Day Index:", dayIndex)
+    
+    // Blank times whenever no explicit day selection is made to prevent inconsistency between form state and table output.
+    if (dayIndex == -1) { 
+        selector.innerHTML = '';
+        selector.style.visibility = 'hidden';
+        return;
+    };  
+    
+    dailyJSON = parsedJSON[dayIndex];  // JSON data for selected day - Use this object later
+    var slots = dailyJSON.slots;    // Object of slots for day - keys are "hash-style" strings
+    
+    // Get Array of Time Slots for day
+    timesToday = [];
+    var i = 0
+    for (key in slots) {
+            timesToday[i] = slots[key].time;
+            i++;
+        }
+    
+    // Fill Selector with indexed Times
+    var selectorStr = '<option type="submit" value="A">-- Select Time (optional) --</option><option type="submit" value="A">All Sessions</option>'
+    for (var i = 0; i < timesToday.length; i++) {
+         selectorStr += '<option value="'+ i +'">'+ timesToday[i] +'</option>';
+    }
+    
+    selector.innerHTML = selectorStr;
+    selector.style.visibility = 'visible';
+}
+
+// Function fills Timetable Heading using dailyJSON Array - called by buildTable()
+function fillHeading() {
+    var day = dailyJSON.day;
+    var date = dailyJSON.date;
+    var headingStr = "<h2>" +day + "  -  " + date + "</h2>";
+    var h = document.getElementById("heading");
+    h.innerHTML = headingStr;
+} 
+
+// Function makes and inserts radio filter form: id=radioFilter - called by buildTable() 
+function mkRadioFilter() {
+    var radioFilterStr = '<input type="radio" name="filter" value="all" id="all">All Types<input type="radio" name="filter" value="paper" id="paper">Paper<input type="radio" name="filter" value="other" id="other">Other<input class="selectButton" type="button" style="margin-left: 10px;" onclick="filterByType()" value="Filter Session Type"><br>'
+    var rf = document.getElementById("radioFilter")
+    rf.innerHTML = radioFilterStr;
+}
+
+// Function add some information text above table: id=info - called by buildTable()
+function infoText() {
+    var x = document.getElementById("info");
+    x.innerHTML = "<h3>Click a Session's Title to show relevant submissions.</h3>"
+}
+ 
+// Function reads session data from sessions array - returns a string
+function parseSessions(sessions, filter) {
+    var tableStr = ''
+    for (var i = 0; i < sessions.length; i++) {
+        var type = sessions[i].type;
+        
+        // Apply session-type filter
+        if (filter == 'other') { if (type == 'paper') { continue; }
+        } else if (filter == 'paper') { if (type != 'paper') { continue; }
+        }
+        
+        var title = sessions[i].title;
+        var room = sessions[i].room;
+        var time = sessions[i].time;        
+
+        var submissions = sessions[i].submissions;
+        var submissionsTab = getSubmissions(submissions);
+
+        tableStr += '<tr><td>'+ time +'</td><td><span class="clickSpan" title="Click to toggle submissions." onclick=toggleChild(this)>'+ title +'</span>'+ submissionsTab +"</td><td>"+ type +"</td><td>"+ room +"</td></tr>";
+
+        }
+    return tableStr;
+}    
+    
+// Function gets submissions from submissions array and makes sub-table for insertion - returns a string.
+function getSubmissions(submissions) {
+    var substr = '<table class="hidethis" style="visibility: collapse;"><tr class="cursorChange" title="Click to hide submissions." onclick=hideSelf(this)><th>Session Submissions (click to hide)</th><th>doiURL</th></tr>';
+    
+    // First handle case where there are no submissions
+    if (submissions.length == 0 ) {
+        substr += '<tr><td> No Submissions for this session</td><td></td></tr></table>';
+        return substr;
+    };
+    
+    for (var j = 0; j < submissions.length; j++) {
+
+        var subtitle = submissions[j].title;
+        var suburl = submissions[j].doiUrl;
+        if (suburl.length < 4) {
+            substr += '<tr><td>'+ subtitle +'</td><td>n/a</td></tr>';
+        } else {
+            substr += '<tr><td>'+ subtitle +'</td><td><a href="'+ suburl + '"title="click to open submission" target="_blank">link</a></td></tr>';
+        }
+    };
+    
+    substr += '</table>';
+    return substr;
+}
+
+// Function builds main table - can take filter values, default is 'all'
+function buildTable(filter = 'all') {
+    var x = document.getElementById("timeSelector");
+    
+    // If times have not been generated (because day has not been selected) display error msg & exit function
+    if (x.innerHTML == '') { 
+        document.getElementById("daySelectionError").innerHTML = "A day must be selected.";
+        return;
+    };
+    
+    var slotIndex = x.options[x.selectedIndex].value;
+    var slotValue = x.options[x.selectedIndex].text;
+    var slots = dailyJSON.slots;
+    
+    // First insert items above table
+    fillHeading();
+    mkRadioFilter();
+    document.getElementById(filter).checked = true;     // Check the appropriate radio button
+    infoText();
+    
+    // Now build the table
+    var tb = document.getElementById("mainTable");
+    var tab1 = "<table><tr><th>Time</th><th>Session Title</th><th>Session Type</th><th>Location</th></tr>";
+    var tab1_initial = tab1;    // Copy of tab1 strting for later comparison
+    
+    if (slotIndex >= 0) {       // If a particular time slot is selected
+        var sessions = [];
+        for (key in slots) {
+            if (slots[key].time == slotValue) {
+                sessions = slots[key].sessions;
+                break;
+            }
+        }
+        // Call parseSessions for choosen time slot
+        tab1 += parseSessions(sessions, filter);
+        
+    } else if (slotIndex == 'A') {      // Else If no slot selected or If all day explicity selected
+        var sessions = new Array(timesToday.length);
+            for (key in slots) {
+                for (var i = 0; i < timesToday.length; i++) {
+                    if (slots[key].time == timesToday[i]) { 
+                        sessions[i] = slots[key].sessions;
+                        break;
+                    };
+                }
+            }
+    
+    }
+        // Call parseSession for each session in turn
+        for (var i = 0; i < sessions.length; i++) {
+            tab1 += parseSessions(sessions[i], filter);
+        }
+    
+    // Compare tab1 to initial value - if equal no sessions were added.
+    if ( tab1 == tab1_initial && filter == 'paper' ) { 
+        tab1 += '<tr><td></td><td>No Paper Sessions during selected timeslot.</td><td></td><td></td></tr>'; 
+    } else if (tab1 == tab1_initial && filter == 'other') {
+        tab1 += '<tr><td></td><td>No Non-Paper Sessions during selected timeslot.</td><td></td><td></td></tr>'; 
+    } else if (tab1 == tab1_initial ) {
+        tab1 += '<tr><td></td><td>No Sessions during selected timeslot.</td><td></td><td></td></tr>'; 
+    };
+    
+    tab1 += "</table>";
+    tb.innerHTML = tab1;
+}
+    
+// Function to Toggle Child Table Visibility in Main Table     
+function toggleChild(obj) {
+    var t = obj.parentElement.children;
+    if (t[1].style.visibility == 'collapse') {
+        t[1].style.visibility = 'visible';
+    }
+    else {
+        t[1].style.visibility = 'collapse';
+    }
+}
+
+// Function to hide Submissions sub-Table when visibile
+function hideSelf(obj) {
+    var t =obj.parentElement.parentElement;
+    if (t.style.visibility == 'visible') { t.style.visibility = 'collapse'; }
+}
+
+// Function takes input from radio buttons and calls buildTable() with appropriate filter
+function filterByType() {
+    var rFilter = document.getElementById("radioFilter");
+    var value = rFilter.elements.filter.value;
+    buildTable(value);
+}
+    
+</script>    
+</body>
+</html>
