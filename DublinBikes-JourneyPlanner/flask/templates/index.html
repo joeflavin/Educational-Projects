@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dublin Bikes - Off the Chain Journey Planner</title>
+    <link rel=stylesheet href="{{ url_for('static', filename='style.css') }}">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'>
+
+</head>
+
+<body>
+<!--<div id="pageWrapper">-->
+
+
+<header>
+    <div id="pageTitle"><h1>Dublin Bikes - Journey Planner</h1></div>
+    <div id="weatherWrapper">
+        <div id="weatherIconWrapper">
+                <div id="wIcon">
+                    <img src="static/images/icons/{{ wdata.icon[0] }}@2x.png" width="80" height="80">
+                    <div id="wDetail">{{ wdata.detail[0].title() }}</div>
+                </div>
+        </div>
+        <div id="weatherData">
+            <ul>
+                <li>Temp: {{ wdata.temp[0]|round(1,'common') }}&#176C</li>
+                <li>Feels-like: {{ wdata.feelslike[0]|round(1,'floor') }}&#176C</li>
+                <li>Wind: {{ '%0.1f'|format(wdata.wind[0]*3.6)|int }} km/h {{ wdata.direction[0].upper() }}</li>
+            </ul>
+        </div>
+    </div>
+
+</header>
+
+
+
+
+<div id="map_sidetab_container">
+
+    <div id="map"></div>
+    <div id=sidetab>
+
+        <div class="tab">
+            <button class="sidebar_tabs" onclick="openTab(event, 'station_finder')" id="station_finder_tab">Find a station</button>
+            <button class="sidebar_tabs" onclick="openTab(event, 'route_planner')" id="route_planner_tab">Route Planner
+            </button>
+
+        </div>
+
+        <div id="route_planner" class="tabcontent">
+
+            <div id="routePlan">
+                <table id="routeExplainTable" width=100% style="display:table;">
+                    <tr><th>Route Plan</th></tr>
+                    <tr id="routeExplain">
+                        <td>
+                            Your <strong>planned route</strong> will show here as you make selections below.
+                            The planner will suggest stations but you may make your own choices from the menus.
+                            <br>If you choose a future date/time the shown availability will be
+                            <strong>predictions</strong> based on historical and forecast data.
+                            <br>You may display your planned journey on the map.
+                        </td>
+                    </tr>
+                </table>
+                <table id="routePlanTable" width="100%" style="display:none;">
+                    <tr><th colspan="3">Route Plan</th></tr>
+                    <tr id="leg0" style='visibility:collapse'>
+                        <td> <i class="fas fa-walking"></i></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr id="leg1" style='visibility:collapse;'>
+                        <td> <i class="fas fa-bicycle"></i></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr id="leg2" style='visibility:collapse;'>
+                        <td> <i class="fas fa-walking"></i></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr id="weatherPrediction" style='visibility:collapse;'>
+                        <td style="background-color:cadetblue"></td>
+                        <td colspan="2"></td>
+                    </tr>
+                    <tr id="routeButtons" style='visibility:collapse;'>
+                        <td></td>
+                        <td>
+                            <button class="routeButton" type="submit" onclick="f.drawRoute()">Show Route</button>
+                            <button class="routeButton" type="button" onclick="f.hideRoute()">Hide Route</button>
+                            <button class="routeButton" type="reset" onclick="f.resetRoute()">Reset</button>
+                        </td>
+                        <td></td>
+                    </tr>
+                </table>
+
+            </div>
+
+                <div id="date_time_wrapper">
+                    <p id="journey_time_header" class="route_planner_subheader">Time</p>
+
+                    <div id="date_time_select_wrapper">
+
+                    <div id="date_select_wrapper">
+                        <div class="dt_selection_label" id="date_label">
+                        Date
+                        </div>
+                        <div class="dt_selection" id="date_selection" onclick="DateDropdownClicked(event)">
+                            <div id="dt_arrow_container">
+                                <div id="date_value">
+                                Today
+                                </div>
+                                <div id="dt-arrow-icon" onclick="DateDropdownClicked(event)">
+                                    <i id="dropdownarrowdt" class="arrow down" onclick="DateDropdownClicked(event)">
+                                    </i>
+                                </div>
+                            </div>
+                            <div id="date_options">
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+                    <div id="time_select_wrapper">
+                        <div class="dt_selection_label" id="time_label">
+                        Time
+                        </div>
+                            <div class="dt_selection" id="time_selection" onclick="TimeDropdownClicked(event)">
+                                <div id="time_arrow_container">
+                                    <div id="time_value">
+                                        Now
+                                    </div>
+                                    <div id="time-arrow-icon" onclick="TimeDropdownClicked(event)">
+                                        <i id="dropdownarrowtime" class="arrow down" onclick="TimeDropdownClicked(event)">
+                                        </i>
+                                    </div>
+                                </div>
+                                <div id="time_options">
+                                </div>
+                            </div>
+
+                    </div>
+
+
+                    </div>
+                </div>
+
+            <p class="route_planner_subheader">Start Point:
+            <input id="inputOrigin" placeholder="Enter your start point" type="text" /> </p>
+            <p id="infoOrigin"></p>
+
+                <div id="loader1" class="loader"></div>
+            <div id="select_origin_wrapper" class="select_suggested_wrapper">
+                <div class="select_suggested_header" id="suggested-start-label">
+                    Suggested Start Stations
+                </div>
+                <div class="select_suggested_dropdown_wrapper" id="select_suggested_start_wrapper" onclick="StartSuggestionDropdownClick(event)">
+                        <div id="start_selected_value_wrapper" class="selected_value_wrapper">
+                            <div id="start_selected_value"></div>
+                        <div id="arrow-icon-start-suggestions" onclick="StartSuggestionDropdownClick(event)">
+                            <i id="dropdownarrow-start-suggestions" class="arrow down" onclick="StartSuggestionDropdownClick(event)">
+                            </i>
+                        </div>
+                        </div>
+
+                        <div id="start_station_options">
+
+                        </div>
+                </div>
+            </div>
+
+            <p class="route_planner_subheader">End Point:
+            <input id="inputDestin" placeholder="Enter your destination" type="text" /> </p>
+            <p id="infoDestin"></p>
+
+            <div id="loader2" class="loader"></div>
+            <div id="select_destination_wrapper" class="select_suggested_wrapper">
+                <div class="select_suggested_header" id="suggested-end-label">
+                    Suggested End Stations
+                </div>
+                <div class="select_suggested_dropdown_wrapper" id="select_suggested_end_wrapper" onclick="EndSuggestionDropdownClick(event)">
+                    <div id="end_selected_value_wrapper" class="selected_value_wrapper">
+                        <div id="end_selected_value">
+                        </div>
+                        <div id="arrow-icon-end-suggestions" onclick="EndSuggestionDropdownClick(event)">
+                            <i id="dropdownarrow-end-suggestions" class="arrow down" onclick="EndSuggestionDropdownClick(event)">
+                            </i>
+                        </div>
+
+                    </div>
+
+                    <div id="end_station_options">
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="station_finder" class="tabcontent">
+
+            <div id="your-location-error">
+            *Could not detect user location, please enter below*
+            </div>
+            <div id="your-location-wrapper">
+                <div id="your-location-title">
+                    Your Location
+                </div>
+                <input id="your-location-autocomplete" placeholder="Enter your location" type="text" />
+            </div>
+
+
+
+
+        <div id="custom-dropdown">
+
+
+
+            <select id="station_select">
+            </select>
+
+            <div id="list-container">
+
+                <div id="selectedwrapper"  style="display: flex; flex-direction: row">
+                    <div id="selected-element" onclick="DropdownClicked(event)">
+                    </div>
+
+                    <div id="arrow-icon" onclick="DropdownClicked(event)">
+                    <i id="dropdownarrow" class="arrow down" onclick="DropdownClicked(event)">
+                    </i>
+                    </div>
+                </div>
+
+                <div id="dropdown-station-list">
+                </div>
+            </div>
+        </div>
+
+        <div id="sidebar">
+        </div>
+
+        <div id="availability_patterns_section">
+
+            <div class="chart_container">
+            <canvas id="hourly_availability">
+            </canvas>
+            </div>
+
+            <div class="chart_container">
+            <canvas class="barchart" id="daily_availability">
+            </canvas>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<footer>
+<div id="footer_left"><a target="blank" href="https://www.dublinbikes.ie/en/home">Dublin Bikes</a> | Data from JCDecaux & OpenWeatherMap</div>
+     <div id="footer_right"><a href="mailto:offthechaindublin@gmail.com">offthechaindublin@gmail.com</a></div>
+</footer>
+
+<!--</div>-->
+</body>
+
+
+<script src="{{url_for('static', filename='index.js')}}"></script>
+<script
+        
+      src="https://maps.googleapis.com/maps/api/js?key=_INSERT-APIKEY_&callback=initMap&libraries=places&v=weekly"
+      
+   ></script>
+    
+
+
+
+</html>
