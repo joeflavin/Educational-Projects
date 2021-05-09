@@ -1,1 +1,5 @@
+# Prevent Jupyter Notebooks from being counted
 *.ipynb linguist-vendored=true
+
+# Make Jupyter Notebooks be counted as Python
+#*.ipynb linguist-language=Python
