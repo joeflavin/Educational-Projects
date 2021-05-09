@@ -1,3 +1,5 @@
+from myLinkList import myLinkList
+
 class myQueue(myLinkedList):
     def __init__(self):
         super().__init__()
