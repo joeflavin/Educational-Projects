@@ -2,6 +2,9 @@ import unittest
 import contextlib
 from io import StringIO
 
+from myLinkedList import myLinkedList
+from myStack import myStack
+from myQueue import myQueue
 
 class testLinkedList(unittest.TestCase):
 
@@ -295,4 +298,3 @@ class testQueue(unittest.TestCase):
 
 
 unittest.main(argv=[''], verbosity=2, exit=False)
-        
