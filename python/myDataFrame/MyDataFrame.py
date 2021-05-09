@@ -1,3 +1,5 @@
+from MySeries import MySeries
+
 class MyDataFrame:
     """ MyDataFrame uses MySeries Class """
     def __init__(self, dictionary, index = None):
@@ -68,5 +70,3 @@ class MyDataFrame:
                 continue
             else:
                 print("{:<15} {:8.2f}".format(key, average))
-
-                
