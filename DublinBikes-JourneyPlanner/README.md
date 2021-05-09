@@ -9,3 +9,5 @@ Built using HTML5, CSS3, JavaScript, Flask.
 Data from JCDecaux & OpenWeatherMap.
 
 **Contact**: <a href="mailto:offthechaindublin@gmail.com">offthechaindublin@gmail.com</a> 
+
+Commit History Removed as it contained API Keys and other credentials not appropriate for public repository.
