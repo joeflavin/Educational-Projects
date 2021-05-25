@@ -203,7 +203,7 @@ def send_notification_email(err):
     server = smtplib.SMTP('smtp.gmail.com',587) 
     server.ehlo()
     server.starttls() 
-    server.login("offthechaindublin@gmail.com","overviewderbytrailsideglarepromenadegraves")
+    server.login("offthechaindublin@gmail.com","REMOVED")
     sent_from = 'offthechaindublin@gmail.com'
     to = ['offthechaindublin@gmail.com'] 
     subject = "Logger down!"
