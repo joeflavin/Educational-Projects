@@ -1,6 +1,6 @@
 **Java Game System**
 
-Simple Java console based Game System featuring persistent Users & Scores.
+Simple console based Game System written in Java featuring persistent Users & Scores.
 
 Currently includes 3 Games:
 - Rock Paper Scissors
