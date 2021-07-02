@@ -1,2 +1,3 @@
-## Java coming soon
-Contact me to view demonstration of my java programming
+## More Java coming soon
+
+Added console based Java Game System
