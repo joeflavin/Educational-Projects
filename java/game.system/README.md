@@ -1,4 +1,4 @@
-##Java Game System
+## Java Game System
 
 Simple console based Game System written in Java featuring persistent Users & Scores.
 
