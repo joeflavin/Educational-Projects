@@ -70,7 +70,7 @@ class Maths extends Game {
 				operand2 = getRandomNumber(11, 30);
 				ans = operand1 * operand2;
 				
-				System.out.println("\nAdd: " +operand1+ " x " +operand2);
+				System.out.println("\nMultiply: " +operand1+ " x " +operand2);
 			}		
 				
 			if (input.hasNextInt()) {
